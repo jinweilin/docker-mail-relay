@@ -11,20 +11,19 @@ ENV LANG       en_US.UTF-8
 ENV LC_ALL     en_US.UTF-8
 RUN dpkg-reconfigure locales
 
-RUN cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime && \
-    echo 'Asia/Taipei' > /etc/timezone && date
-RUN sed -e 's;UTC=yes;UTC=no;' -i /etc/default/rcS
+RUN echo "!/bin/sh ntpdate ntp.ubuntu.com" >> /etc/cron.daily/ntpdate && \
+		cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime && \
+    echo 'Asia/Taipei' > /etc/timezone && date && \
+    sed -e 's;UTC=yes;UTC=no;' -i /etc/default/rcS && \
+    echo "!/bin/sh ntpdate ntp.ubuntu.com" >> /etc/cron.daily/ntpdate && \
+    chmod 750 /etc/cron.daily/ntpdate
 
 # Packages: update
 RUN echo "deb http://archive.ubuntu.com/ubuntu/ trusty multiverse" > /etc/apt/sources.list.d/multiverse.list && \
     echo "deb http://archive.ubuntu.com/ubuntu/ trusty-updates multiverse" >> /etc/apt/sources.list.d/multiverse.list && \
-    apt-get update -qq
-
-RUN apt-get install -qq -y --no-install-recommends postfix ca-certificates libsasl2-modules python-pip supervisor
-RUN pip install j2cli
-
-RUN echo "!/bin/sh ntpdate ntp.ubuntu.com" >> /etc/cron.daily/ntpdate \
-    && chmod 750 /etc/cron.daily/ntpdate
+    apt-get update -qq && \
+    apt-get install -qq -y --no-install-recommends postfix ca-certificates libsasl2-modules python-pip supervisor && \
+    pip install j2cli
 
 # Add files
 ADD conf /root/conf
